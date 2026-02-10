@@ -1,3 +1,5 @@
+from storage import load_tasks, save_tasks
+
 # define functionalities
 def header():
     print(" _____________________________________________________________________________________")
@@ -17,7 +19,7 @@ def manual():
     print(" >> 'UPDATE'   - Rewrite a task (UPDATE <task_number>). Ex: UPDATE 1")
     print(" >> 'SHOW'     - Show all tasks.")
     print(" >> 'HELP'     - Show the command words.")
-    print(" >> 'END'      - Close the app. All remaining tasks will be removed.")
+    print(" >> 'END'      - Close the app.")
 
 def show_task(todo_list):
     if not todo_list:
@@ -25,7 +27,7 @@ def show_task(todo_list):
     else:
         result = []
         for i in range(len(todo_list)):
-            result.append(f"    <{i+1}> {todo_list[i]}")
+            result.append(f'    <{i+1}> {"[✅]" if todo_list[i]["done"] else "[⏳]"} {todo_list[i]["task"]}')
         return "\n".join(result)
 
 def add_task(val):
@@ -38,7 +40,8 @@ def add_task(val):
             "tasks" : None
         }
     
-    todo_list.append(task)
+    todo_list.append({"task" : task, "done" : False})
+    save_tasks(todo_list)
 
     return {
         "done"  : True,
@@ -68,8 +71,16 @@ def complete_task(val):
             "msg"   : "Invalid task no.! Please select a valid task you want to complete!",
             "tasks" : todo_list.copy()
         }
+    elif todo_list[task_num - 1]["done"]:
+        return {
+            "done": False,
+            "msg": "Task already completed!",
+            "tasks": todo_list.copy()
+        }
     else:
-        todo_list.pop(task_num - 1)
+        todo_list[task_num - 1]["done"] = True
+        save_tasks(todo_list)
+
         return {
             "done"  : True,
             "msg"   : f"Task - {task_num} completed successfully!",
@@ -100,6 +111,7 @@ def delete_task(val):
         }
     else:
         todo_list.pop(task_num - 1)
+        save_tasks(todo_list)
 
         return {
             "done"  : True,
@@ -133,7 +145,9 @@ def update_task(val):
         while True:
             updated_task = input(" >> Updated task >> ").strip()
             if updated_task:
-                todo_list[task_num - 1] = updated_task
+                todo_list[task_num - 1]["task"] = updated_task
+                save_tasks(todo_list)
+
                 return {
                     "done"  : True,
                     "msg"   : f"Task - {task_num} updated successfully!",
@@ -202,5 +216,5 @@ def main():
             print(" >> Unknown Command!")
 
 # Main App
-todo_list = []
+todo_list = load_tasks()
 main()
